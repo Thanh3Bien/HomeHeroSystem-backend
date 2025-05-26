@@ -15,6 +15,9 @@ namespace HomeHeroSystem.Services
         {
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IAppUserService, AppUserService>();
+
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IJwtService, JwtService>();
             return services;
         }
     }

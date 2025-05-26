@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HomeHeroSystem.Repositories.Entities;
+using HomeHeroSystem.Repositories.Infrastructures;
 
 namespace HomeHeroSystem.Repositories.Interfaces
 {
-    public interface IAdminRepository
+    public interface IAdminRepository : IGenericRepository<Admin>
     {
-        Task<IEnumerable<Admin>> GetAllAsync();
     }
 }

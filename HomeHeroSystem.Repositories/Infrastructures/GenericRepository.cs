@@ -37,6 +37,31 @@ namespace HomeHeroSystem.Repositories.Infrastructures
             return null;
         }
 
+        public virtual async Task<bool> DeactivateAsync(int id)
+        {
+            var entity = await _dbSet.FindAsync(id);
+            if (entity == null)
+            {
+                _logger.LogWarning($"Entity with id {id} not found.");
+                return false;
+            }
+
+            var isActiveProperty = entity.GetType().GetProperty("IsActive");
+            var updatedAtProperty = entity.GetType().GetProperty("UpdatedAt");
+
+            if (isActiveProperty != null && isActiveProperty.PropertyType == typeof(bool?))
+            {
+                isActiveProperty.SetValue(entity, false);
+                updatedAtProperty?.SetValue(entity, DateTime.Now);
+                _context.Update(entity);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+
+            _logger.LogWarning($"Entity does not have IsActive property for soft delete");
+            return false;
+        }
+
         public virtual async Task<bool> DeleteAsync(int id)
         {
             var entity = await _dbSet.FindAsync(id);

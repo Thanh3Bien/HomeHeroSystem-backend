@@ -13,6 +13,7 @@ namespace HomeHeroSystem.Repositories.Infrastructures
         void UpdateEntity(TEntity entity);
 
         Task<IEnumerable<TEntity>> GetAllAsync();
+        Task<bool> DeactivateAsync(int id);
         Task<bool> DeleteAsync(int id);
     }
 }
