@@ -1,0 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using HomeHeroSystem.Repositories.Entities;
+using HomeHeroSystem.Repositories.Infrastructures;
+using HomeHeroSystem.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace HomeHeroSystem.Repositories.Repositories
+{
+    public class ServiceRepository : GenericRepository<Service>, IServiceRepository
+    {
+        public ServiceRepository(HomeHeroContext context, ILogger logger)
+            : base(context, logger)
+        {
+        }
+
+        public async Task<Service?> GetServiceByNameAsync(string serviceName)
+        {
+            var service = await _context.Services.FirstOrDefaultAsync(s => s.ServiceName == serviceName && s.IsDeleted !=true);
+            return service;
+        }
+    }
+}

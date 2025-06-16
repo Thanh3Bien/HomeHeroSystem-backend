@@ -11,6 +11,11 @@ namespace HomeHeroSystem.Repositories.Infrastructures
     {
         IAdminRepository Admins { get; }
         IAppUserRepository AppUsers { get; }
+
+        IBookingRepository Bookings { get; }
+        ITechnicianRepository Technicians { get; }
+        IServiceRepository Services { get; }
+   
         Task CompleteAsync();
     }
 }

@@ -108,5 +108,12 @@ namespace HomeHeroSystem.Repositories.Repositories
                 throw;
             }
         }
+
+        public async Task<AppUser?> GetUserByNameAndPhoneAsync(string name, string phone)
+        {
+            var user = await _context.AppUsers
+        .FirstOrDefaultAsync(u => u.FullName == name && u.Phone == phone);
+            return user;
+        }
     }
 }
