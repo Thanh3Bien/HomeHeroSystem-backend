@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HomeHeroSystem.Services.Interfaces;
+using HomeHeroSystem.Services.Mappings;
 using HomeHeroSystem.Services.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,9 +16,11 @@ namespace HomeHeroSystem.Services
         {
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IAppUserService, AppUserService>();
+            services.AddScoped<IBookingService, BookingService>();
 
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddAutoMapper(typeof(MappingProfiles));
             return services;
         }
     }

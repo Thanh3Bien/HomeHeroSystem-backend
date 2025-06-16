@@ -15,5 +15,8 @@ namespace HomeHeroSystem.Repositories.Interfaces
         Task<AppUser?> GetByEmailAsync(string email);
         Task<AppUser?> GetByPhoneAsync(string phone);
         Task<IEnumerable<AppUser>> SearchUsersAsync(string searchTerm);
+
+        //CheckUser
+        Task<AppUser?> GetUserByNameAndPhoneAsync(string name, string phone);
     }
 }

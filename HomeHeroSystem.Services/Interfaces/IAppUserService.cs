@@ -19,5 +19,8 @@ namespace HomeHeroSystem.Services.Interfaces
         Task<bool> ActivateUserAsync(int id);
         Task<(IEnumerable<AppUser> Users, int TotalCount)> GetActiveUsersAsync(int page, int pageSize);
         Task<IEnumerable<AppUser>> SearchUsersAsync(string searchTerm);
+
+
+        
     }
 }

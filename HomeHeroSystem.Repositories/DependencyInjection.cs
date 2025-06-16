@@ -14,8 +14,6 @@ namespace HomeHeroSystem.Repositories
     {
         public static IServiceCollection ConfigureDALServices(this IServiceCollection services)
         {
-            //services.AddScoped<IAdminRepository, AdminRepository>();
-            //services.AddScoped<IAppUserRepository, AppUserRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             return services;
         }
