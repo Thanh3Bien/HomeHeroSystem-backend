@@ -14,8 +14,13 @@ namespace HomeHeroSystem.Repositories.Infrastructures
 
         IBookingRepository Bookings { get; }
         ITechnicianRepository Technicians { get; }
+        ITechnicianSkillRepository TechnicianSkills { get; }
         IServiceRepository Services { get; }
+        ISkillRepository Skills { get; }
    
         Task CompleteAsync();
+        Task BeginTransactionAsync();
+        Task CommitTransactionAsync();
+        Task RollbackTransactionAsync();
     }
 }

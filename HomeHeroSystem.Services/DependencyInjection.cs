@@ -17,6 +17,8 @@ namespace HomeHeroSystem.Services
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IAppUserService, AppUserService>();
             services.AddScoped<IBookingService, BookingService>();
+            services.AddScoped<ITechnicianService, TechnicianService>();
+            services.AddScoped<ISkillService, SkillService>();
 
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IJwtService, JwtService>();

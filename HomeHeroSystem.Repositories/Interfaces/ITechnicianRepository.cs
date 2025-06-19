@@ -10,6 +10,35 @@ namespace HomeHeroSystem.Repositories.Interfaces
 {
     public interface ITechnicianRepository : IGenericRepository<Technician>
     {
-        Task<Technician?> GetTechnicianByNameAsync(string technicianName); 
+        //Get method
+        Task<Technician?> GetTechnicianByNameAsync(string technicianName);
+        Task<(List<Technician> technicians, int totalCount)> GetTechniciansWithFilterAsync(
+            string? status,
+            string? skill,
+            string? search,
+            int page,
+            int pageSize);
+        Task<List<string>> GetTechnicianSkillsAsync(int technicianId);
+        Task<decimal> GetTechnicianRatingAsync(int technicianId);
+        Task<int> GetTechnicianJobsCountAsync(int technicianId);
+
+
+        //Set method
+        Task<bool> IsEmailExistAsync(string email);
+        Task<bool> IsPhoneExistAsync(string phone);
+
+        Task<bool> IsAddressExistAsync(int addressId);
+
+        Task<bool> IsEmailExistForUpdateAsync(string email, int technicianId);
+        Task<bool> IsPhoneExistForUpdateAsync(string phone, int technicianId);
+
+
+        Task<int> GetActiveTechniciansCountAsync();
+        Task<int> GetInactiveTechniciansCountAsync();
+        Task<decimal> GetAverageRatingAsync();
+        Task<int> GetTotalJobsCompletedAsync();
+
+
+
     }
 }
