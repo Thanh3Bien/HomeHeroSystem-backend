@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HomeHeroSystem.Repositories.Interfaces;
+using HomeHeroSystem.Repositories.Repositories;
 using HomeHeroSystem.Services.Interfaces;
 using HomeHeroSystem.Services.Mappings;
 using HomeHeroSystem.Services.Services;
@@ -19,6 +21,7 @@ namespace HomeHeroSystem.Services
             services.AddScoped<IBookingService, BookingService>();
             services.AddScoped<ITechnicianService, TechnicianService>();
             services.AddScoped<ISkillService, SkillService>();
+            services.AddScoped<IProductService, ProductService>();  
 
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IJwtService, JwtService>();
