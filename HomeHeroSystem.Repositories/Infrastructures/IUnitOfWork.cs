@@ -20,6 +20,7 @@ namespace HomeHeroSystem.Repositories.Infrastructures
 
         IProductRepository Products { get; }
         IProductCategoryRepository ProductCategories { get; }
+        IAddressRepository Addresses { get; }
    
         Task CompleteAsync();
         Task BeginTransactionAsync();

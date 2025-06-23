@@ -26,6 +26,7 @@ namespace HomeHeroSystem.Repositories.Infrastructures
         public ISkillRepository Skills { get; private set; }
         public IProductRepository Products { get; private set; }
         public IProductCategoryRepository ProductCategories { get; private set; }
+        public IAddressRepository Addresses {  get; private set; }  
         public UnitOfWork(HomeHeroContext context, ILoggerFactory loggerFactory)
         {
             _context = context;
@@ -43,6 +44,7 @@ namespace HomeHeroSystem.Repositories.Infrastructures
             Skills = new SkillRepository(_context, _logger);
             Products = new ProductRepository(_context, _logger);
             ProductCategories = new ProductCategoryRepository(_context, _logger);
+            Addresses = new AddressRepository(_context, _logger);
 
         }
         public async Task CompleteAsync() => await _context.SaveChangesAsync();

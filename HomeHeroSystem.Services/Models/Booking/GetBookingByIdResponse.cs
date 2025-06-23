@@ -27,6 +27,10 @@ namespace HomeHeroSystem.Services.Models.Booking
 
         // Address Information
         public string Address { get; set; } = null!;
+        public string Street { get; set; } = null!;
+        public string Ward { get; set; } = null!;
+        public string District { get; set; } = null!;
+        public string City { get; set; } = null!;
 
         // Additional Information
         public string? Note { get; set; }
