@@ -17,6 +17,9 @@ namespace HomeHeroSystem.Repositories.Infrastructures
         ITechnicianSkillRepository TechnicianSkills { get; }
         IServiceRepository Services { get; }
         ISkillRepository Skills { get; }
+
+        IProductRepository Products { get; }
+        IProductCategoryRepository ProductCategories { get; }
    
         Task CompleteAsync();
         Task BeginTransactionAsync();
