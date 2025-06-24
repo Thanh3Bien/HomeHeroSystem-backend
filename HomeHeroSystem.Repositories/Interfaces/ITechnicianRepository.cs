@@ -39,6 +39,8 @@ namespace HomeHeroSystem.Repositories.Interfaces
         Task<int> GetTotalJobsCompletedAsync();
 
 
+        Task<IEnumerable<string>> GetTechnicianNamesAsync();
+        Task<IEnumerable<string>> SearchTechnicianNamesAsync(string keyword);
 
     }
 }

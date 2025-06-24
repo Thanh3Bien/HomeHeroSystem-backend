@@ -227,7 +227,27 @@ namespace HomeHeroSystem.Repositories.Repositories
                 .CountAsync(b => b.Status == "completed");
         }
 
+        public async Task<IEnumerable<string>> GetTechnicianNamesAsync()
+        {
+            return await _context.Technicians
+                .Where(t => t.IsActive == true && !string.IsNullOrEmpty(t.FullName))
+                .Select(t => t.FullName)
+                .Distinct()
+                .OrderBy(name => name)
+                .ToListAsync();
+        }
 
+        public async Task<IEnumerable<string>> SearchTechnicianNamesAsync(string keyword)
+        {
+            return await _context.Technicians
+                .Where(t => t.IsActive == true &&
+                           !string.IsNullOrEmpty(t.FullName) &&
+                           t.FullName.Contains(keyword))
+                .Select(t => t.FullName)
+                .Distinct()
+                .OrderBy(name => name)
+                .ToListAsync();
+        }
 
     }
 }

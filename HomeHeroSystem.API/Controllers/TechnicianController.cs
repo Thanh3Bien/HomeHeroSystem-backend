@@ -108,5 +108,41 @@ namespace HomeHeroSystem.API.Controllers
                 throw new Exception(ex.Message);
             }
         }
+
+
+        [HttpGet("names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetTechnicianNames()
+        {
+            try
+            {
+                var technicianNames = await _technicianService.GetTechnicianNamesAsync();
+                return Ok(technicianNames);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<string>>> SearchTechnicianNames([FromQuery] string keyword)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(keyword))
+                {
+                    // If no keyword, return all technician names
+                    var allTechnicianNames = await _technicianService.GetTechnicianNamesAsync();
+                    return Ok(allTechnicianNames);
+                }
+
+                var filteredTechnicianNames = await _technicianService.SearchTechnicianNamesAsync(keyword);
+                return Ok(filteredTechnicianNames);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

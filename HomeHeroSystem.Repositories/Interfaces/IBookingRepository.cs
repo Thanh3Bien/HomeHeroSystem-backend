@@ -27,5 +27,13 @@ namespace HomeHeroSystem.Repositories.Interfaces
         Task<List<string>> GetAllBookingStatusesAsync();
 
 
+        Task<IEnumerable<Technician>> GetAvailableTechniciansAsync(int serviceId, DateTime bookingDate, string timeSlot);
+        Task<IEnumerable<Technician>> GetTechniciansByLocationAsync(string ward, string district, int serviceId);
+        Task<int> CreateAddressAsync(string street, string ward, string district, string city);
+        Task<int?> FindExistingAddressAsync(string street, string ward, string district, string city);
+        Task<bool> IsTechnicianAvailableAtTimeAsync(int technicianId, DateTime bookingDate, string timeSlot);
+        Task<Technician> GetTechnicianWithAddressAsync(int technicianId);
+
+
     }
 }

@@ -125,5 +125,85 @@ namespace HomeHeroSystem.Repositories.Repositories
             .Where(b => b.IsDeleted != true && b.Status == status)
             .CountAsync();
         }
+
+
+        public async Task<IEnumerable<Technician>> GetAvailableTechniciansAsync(int serviceId, DateTime bookingDate, string timeSlot)
+        {
+            var dateOnly = bookingDate.Date;
+
+            // Get technicians who have skills for this service and are not booked at this time
+            var availableTechnicians = await _context.Technicians
+                .Include(t => t.Address)
+                .Where(t => t.IsActive == true && t.IsDeleted != true &&
+                           !_context.Bookings.Any(b =>
+                               b.TechnicianId == t.TechnicianId &&
+                               b.BookingDate.Date == dateOnly &&
+                               b.PreferredTimeSlot == timeSlot &&
+                               b.Status != "Cancelled" &&
+                               b.IsDeleted == false))
+                .ToListAsync();
+
+            return availableTechnicians;
+        }
+
+        public async Task<IEnumerable<Technician>> GetTechniciansByLocationAsync(string ward, string district, int serviceId)
+        {
+            var allAvailableTechnicians = await GetAvailableTechniciansAsync(serviceId, DateTime.Now, "");
+
+            return allAvailableTechnicians.Where(t => t.Address != null &&
+                (t.Address.Ward == ward || t.Address.District == district));
+        }
+
+        public async Task<int> CreateAddressAsync(string street, string ward, string district, string city)
+        {
+            var address = new Address
+            {
+                Street = street,
+                Ward = ward,
+                District = district,
+                City = city,
+                CreatedAt = DateTime.Now,
+                IsDeleted = false
+            };
+
+            _context.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+            return address.AddressId;
+        }
+
+        public async Task<int?> FindExistingAddressAsync(string street, string ward, string district, string city)
+        {
+            var existingAddress = await _context.Addresses
+                .FirstOrDefaultAsync(a =>
+                    a.Street == street &&
+                    a.Ward == ward &&
+                    a.District == district &&
+                    a.City == city &&
+                    a.IsDeleted == false);
+
+            return existingAddress?.AddressId;
+        }
+
+        public async Task<bool> IsTechnicianAvailableAtTimeAsync(int technicianId, DateTime bookingDate, string timeSlot)
+        {
+            var dateOnly = bookingDate.Date;
+
+            var conflictingBookings = await _context.Bookings
+                .CountAsync(b =>
+                    b.TechnicianId == technicianId &&
+                    b.BookingDate.Date == dateOnly &&
+                    b.PreferredTimeSlot == timeSlot &&
+                    b.Status != "Cancelled" &&
+                    b.IsDeleted == false);
+
+            return conflictingBookings == 0;
+        }
+
+        public async Task<Technician> GetTechnicianWithAddressAsync(int technicianId)
+        {
+            return await _context.Technicians
+                .Include(t => t.Address)
+                .FirstOrDefaultAsync(t => t.TechnicianId == technicianId && t.IsActive == true && t.IsDeleted == false);
+        }
     }
 }

@@ -118,18 +118,38 @@ public partial class HomeHeroContext : DbContext
         {
             entity.HasKey(e => e.BookingId).HasName("PK__Bookings__73951AED7A537202");
 
+            entity.ToTable(tb => tb.HasTrigger("TR_Bookings_CalculateTotalPrice"));
+
             entity.HasIndex(e => e.BookingDate, "IX_Bookings_BookingDate");
 
+            entity.HasIndex(e => e.CustomerPhone, "IX_Bookings_CustomerPhone");
+
+            entity.HasIndex(e => e.PreferredTimeSlot, "IX_Bookings_PreferredTimeSlot");
+
             entity.HasIndex(e => e.Status, "IX_Bookings_Status");
+
+            entity.HasIndex(e => e.TotalPrice, "IX_Bookings_TotalPrice");
+
+            entity.HasIndex(e => e.UrgencyLevel, "IX_Bookings_UrgencyLevel");
 
             entity.Property(e => e.BookingDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.CustomerName).HasMaxLength(100);
+            entity.Property(e => e.CustomerPhone).HasMaxLength(20);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Note).HasMaxLength(255);
+            entity.Property(e => e.PreferredTimeSlot).HasMaxLength(50);
             entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UrgencyFee)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UrgencyLevel)
+                .HasMaxLength(20)
+                .HasDefaultValue("normal");
 
             entity.HasOne(d => d.Address).WithMany(p => p.Bookings)
                 .HasForeignKey(d => d.AddressId)

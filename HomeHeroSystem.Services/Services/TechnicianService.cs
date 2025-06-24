@@ -356,5 +356,39 @@ namespace HomeHeroSystem.Services.Services
                 TotalJobsCompleted = totalJobsCompleted
             };
         }
+
+
+        public async Task<IEnumerable<string>> GetTechnicianNamesAsync()
+        {
+            try
+            {
+                var technicianNames = await _unitOfWork.Technicians.GetTechnicianNamesAsync();
+                return technicianNames.Where(name => !string.IsNullOrEmpty(name))
+                                    .OrderBy(name => name);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<IEnumerable<string>> SearchTechnicianNamesAsync(string keyword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(keyword))
+                {
+                    return await GetTechnicianNamesAsync();
+                }
+
+                var filteredNames = await _unitOfWork.Technicians.SearchTechnicianNamesAsync(keyword.Trim());
+                return filteredNames.Where(name => !string.IsNullOrEmpty(name))
+                                  .OrderBy(name => name);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

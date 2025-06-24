@@ -23,7 +23,8 @@ namespace HomeHeroSystem.Services
             services.AddScoped<ISkillService, SkillService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IAddressService, AddressService>();
-
+            services.AddScoped<IServiceService, ServiceService>();
+            services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IJwtService, JwtService>();
             services.AddAutoMapper(typeof(MappingProfiles));

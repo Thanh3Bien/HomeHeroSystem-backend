@@ -146,5 +146,63 @@ namespace HomeHeroSystem.API.Controllers
                 throw new Exception(ex.Message);
             }
         }
+
+
+        [HttpPost("createform")]
+        public async Task<IActionResult> CreateBookingWithAutoAssignRequest([FromBody] CreateBookingWithAutoAssignRequest request)
+        {
+            try
+            {
+
+
+                var result = await _bookingService.CreateBookingWithAutoAssignAsync(request);
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    Message = result.Message,
+                    Data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    IsSuccess = false,
+                    Message = ex.Message,
+                    Data = (object)null
+                });
+            }
+        }
+
+        [HttpGet("available-technicians")]
+        public async Task<IActionResult> GetAvailableTechnicians(
+            [FromQuery] int serviceId,
+            [FromQuery] DateTime date,
+            [FromQuery] string timeSlot,
+            [FromQuery] string ward,
+            [FromQuery] string district)
+        {
+            try
+            {
+                var result = await _bookingService.FindBestTechnicianAsync(serviceId, date, timeSlot, ward, district);
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    Message = "Tìm thợ thành công",
+                    Data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    IsSuccess = false,
+                    Message = ex.Message,
+                    Data = (object)null
+                });
+            }
+        }
     }
 }

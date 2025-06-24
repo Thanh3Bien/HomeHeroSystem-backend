@@ -27,6 +27,20 @@ public partial class Booking
 
     public DateTime? UpdatedAt { get; set; }
 
+    public decimal? TotalPrice { get; set; }
+
+    public string? UrgencyLevel { get; set; }
+
+    public decimal? UrgencyFee { get; set; }
+
+    public string? CustomerName { get; set; }
+
+    public string? CustomerPhone { get; set; }
+
+    public string? PreferredTimeSlot { get; set; }
+
+    public string? ProblemDescription { get; set; }
+
     public virtual Address Address { get; set; } = null!;
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
