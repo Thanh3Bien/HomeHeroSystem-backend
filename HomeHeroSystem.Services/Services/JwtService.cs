@@ -16,61 +16,76 @@ namespace HomeHeroSystem.Services.Services
     public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
-        private readonly ILogger<JwtService> _logger;
         private readonly string _secretKey;
         private readonly string _issuer;
         private readonly string _audience;
-        private readonly int _accessTokenExpireMinutes;
+        private readonly int _expireMinutes;
 
-        public JwtService(IConfiguration configuration, ILogger<JwtService> logger)
+        public JwtService(IConfiguration configuration)
         {
             _configuration = configuration;
-            _logger = logger;
             _secretKey = _configuration["JWT:SecretKey"] ?? throw new ArgumentNullException("JWT:SecretKey");
             _issuer = _configuration["JWT:Issuer"] ?? throw new ArgumentNullException("JWT:Issuer");
             _audience = _configuration["JWT:Audience"] ?? throw new ArgumentNullException("JWT:Audience");
-            _accessTokenExpireMinutes = int.Parse(_configuration["JWT:AccessTokenExpireMinutes"] ?? "60");
+            _expireMinutes = int.Parse(_configuration["JWT:AccessTokenExpireMinutes"] ?? "60");
         }
 
-        public string GenerateAccessToken(AppUser user, string userType = "AppUser")
+        public string GenerateAccessToken(AppUser user)
         {
-            try
+            var claims = new List<Claim>
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_secretKey);
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.FullName),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("Phone", user.Phone),
+                new Claim("UserType", "User"),
+                new Claim("AddressId", user.AddressId?.ToString() ?? ""),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            };
 
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                    new Claim(ClaimTypes.Name, user.FullName),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim("Phone", user.Phone),
-                    new Claim("UserType", userType),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Iat,
-                        new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(),
-                        ClaimValueTypes.Integer64)
-                };
+            return GenerateToken(claims);
+        }
 
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddMinutes(_accessTokenExpireMinutes),
-                    Issuer = _issuer,
-                    Audience = _audience,
-                    SigningCredentials = new SigningCredentials(
-                        new SymmetricSecurityKey(key),
-                        SecurityAlgorithms.HmacSha256Signature)
-                };
-
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                return tokenHandler.WriteToken(token);
-            }
-            catch (Exception ex)
+        public string GenerateAccessToken(Technician technician)
+        {
+            var claims = new List<Claim>
             {
-                _logger.LogError(ex, "Error generating access token for user: {UserId}", user.UserId);
-                throw;
+                new Claim(ClaimTypes.NameIdentifier, technician.TechnicianId.ToString()),
+                new Claim(ClaimTypes.Name, technician.FullName),
+                new Claim(ClaimTypes.Email, technician.Email),
+                new Claim("Phone", technician.Phone),
+                new Claim("UserType", "Technician"),
+                new Claim("ExperienceYears", technician.ExperienceYears?.ToString() ?? "0"),
+                new Claim("AddressId", technician.AddressId?.ToString() ?? ""),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            };
+
+            // Add skills if available
+            if (technician.TechnicianSkills != null && technician.TechnicianSkills.Any())
+            {
+                var skills = string.Join(",", technician.TechnicianSkills.Select(ts => ts.Skill?.SkillName ?? ""));
+                claims.Add(new Claim("Skills", skills));
             }
+
+            return GenerateToken(claims);
+        }
+
+        private string GenerateToken(List<Claim> claims)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _issuer,
+                audience: _audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(_expireMinutes),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public bool ValidateToken(string token)
@@ -78,9 +93,9 @@ namespace HomeHeroSystem.Services.Services
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_secretKey);
+                var key = Encoding.UTF8.GetBytes(_secretKey);
 
-                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                var validationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
@@ -90,36 +105,29 @@ namespace HomeHeroSystem.Services.Services
                     ValidAudience = _audience,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
-                }, out SecurityToken validatedToken);
+                };
 
+                tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogWarning(ex, "Token validation failed");
                 return false;
             }
         }
 
-        public int? GetUserIdFromToken(string token)
+        public Dictionary<string, string> GetTokenClaims(string token)
         {
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var jwt = tokenHandler.ReadJwtToken(token);
-                var userIdClaim = jwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier);
+                var jwtToken = tokenHandler.ReadJwtToken(token);
 
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    return userId;
-                }
-
-                return null;
+                return jwtToken.Claims.ToDictionary(c => c.Type, c => c.Value);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogWarning(ex, "Failed to extract user ID from token");
-                return null;
+                return new Dictionary<string, string>();
             }
         }
     }

@@ -40,24 +40,43 @@ namespace HomeHeroSystem.API.Controllers
                     });
                 }
 
+                // Validate user type
+                var validUserTypes = new[] { "User", "Technician" };
+                if (!validUserTypes.Contains(loginRequest.UserType, StringComparer.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Invalid user type. Must be 'User' or 'Technician'"
+                    });
+                }
+
                 var result = await _authenticationService.LoginAsync(loginRequest);
 
                 if (result == null)
                 {
-                    return Unauthorized(new { message = "Invalid email or password" });
+                    return Unauthorized(new
+                    {
+                        message = $"Invalid email, password, or user type. Please check your credentials and try again."
+                    });
                 }
 
                 return Ok(new
                 {
-                    message = "Login successful",
-                    data = result,
-                    timestamp = DateTime.UtcNow
+                    IsSuccess = true,
+                    Message = $"Login successful as {result.UserType}",
+                    Data = result,
+                    Timestamp = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during login");
-                return StatusCode(500, new { message = "Internal server error occurred" });
+                return StatusCode(500, new
+                {
+                    IsSuccess = false,
+                    Message = "Internal server error occurred",
+                    Data = (object)null
+                });
             }
         }
 
@@ -72,29 +91,43 @@ namespace HomeHeroSystem.API.Controllers
             try
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userTypeClaim = User.FindFirst("UserType")?.Value;
 
-                if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+                if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId) || string.IsNullOrEmpty(userTypeClaim))
                 {
-                    return Unauthorized(new { message = "Invalid or missing user token" });
+                    return Unauthorized(new
+                    {
+                        IsSuccess = false,
+                        Message = "Invalid or missing user token"
+                    });
                 }
 
-                var result = await _authenticationService.LogoutAsync(userId);
+                var result = await _authenticationService.LogoutAsync(userId, userTypeClaim);
 
                 if (!result)
                 {
-                    return NotFound(new { message = "User not found" });
+                    return NotFound(new
+                    {
+                        IsSuccess = false,
+                        Message = "User not found"
+                    });
                 }
 
                 return Ok(new
                 {
-                    message = "Logout successful",
-                    timestamp = DateTime.UtcNow
+                    IsSuccess = true,
+                    Message = $"Logout successful for {userTypeClaim}",
+                    Timestamp = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during logout");
-                return StatusCode(500, new { message = "Internal server error occurred" });
+                return StatusCode(500, new
+                {
+                    IsSuccess = false,
+                    Message = "Internal server error occurred"
+                });
             }
         }
 
@@ -104,39 +137,50 @@ namespace HomeHeroSystem.API.Controllers
         /// <returns>Current user profile information</returns>
         [HttpGet("me")]
         [Authorize]
-        public IActionResult GetCurrentUser()
+        public async Task<IActionResult> GetCurrentUser()
         {
             try
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value;
-                var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
-                var phoneClaim = User.FindFirst("Phone")?.Value;
                 var userTypeClaim = User.FindFirst("UserType")?.Value;
 
-                if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+                if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId) || string.IsNullOrEmpty(userTypeClaim))
                 {
-                    return Unauthorized(new { message = "Invalid token" });
+                    return Unauthorized(new
+                    {
+                        IsSuccess = false,
+                        Message = "Invalid token"
+                    });
+                }
+
+                // Get detailed user information from database
+                var currentUser = await _authenticationService.GetCurrentUserAsync(userId, userTypeClaim);
+
+                if (currentUser == null)
+                {
+                    return NotFound(new
+                    {
+                        IsSuccess = false,
+                        Message = "User not found"
+                    });
                 }
 
                 return Ok(new
                 {
-                    message = "User information retrieved successfully",
-                    data = new
-                    {
-                        UserId = userId,
-                        FullName = nameClaim,
-                        Email = emailClaim,
-                        Phone = phoneClaim,
-                        UserType = userTypeClaim
-                    },
-                    timestamp = DateTime.UtcNow
+                    IsSuccess = true,
+                    Message = "User information retrieved successfully",
+                    Data = currentUser,
+                    Timestamp = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while getting current user info");
-                return StatusCode(500, new { message = "Internal server error occurred" });
+                return StatusCode(500, new
+                {
+                    IsSuccess = false,
+                    Message = "Internal server error occurred"
+                });
             }
         }
 

@@ -9,8 +9,9 @@ namespace HomeHeroSystem.Services.Interfaces
 {
     public interface IJwtService
     {
-        string GenerateAccessToken(AppUser user, string userType = "AppUser");
+        string GenerateAccessToken(AppUser user);
+        string GenerateAccessToken(Technician technician);
         bool ValidateToken(string token);
-        int? GetUserIdFromToken(string token);
+        Dictionary<string, string> GetTokenClaims(string token);
     }
 }

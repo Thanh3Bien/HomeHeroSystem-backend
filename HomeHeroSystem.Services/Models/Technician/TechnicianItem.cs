@@ -16,6 +16,7 @@ namespace HomeHeroSystem.Services.Models.Technician
         public string Email { get; set; } = null!;
 
         public string Phone { get; set; } = null!;
+        public int? ExperienceYears { get; set; }
         public List<string> Skills { get; set; } = new List<string>();
         public decimal Rating { get; set; }
         public int JobsCount { get; set; }

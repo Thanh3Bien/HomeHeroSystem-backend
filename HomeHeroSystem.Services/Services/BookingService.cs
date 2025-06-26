@@ -10,6 +10,7 @@ using HomeHeroSystem.Repositories.Entities;
 using HomeHeroSystem.Repositories.Infrastructures;
 using HomeHeroSystem.Services.Interfaces;
 using HomeHeroSystem.Services.Models.Booking;
+using HomeHeroSystem.Services.Models.BookingByTechnician;
 using HomeHeroSystem.Services.Models.Technician;
 
 namespace HomeHeroSystem.Services.Services
@@ -399,6 +400,85 @@ namespace HomeHeroSystem.Services.Services
             {
                 throw new Exception($"Lỗi khi tìm thợ: {ex.Message}");
             }
+        }
+
+        public async Task<GetBookingsByTechnicianResponse> GetBookingsByTechnicianIdAsync(GetBookingsByTechnicianRequest request)
+        {
+            try
+            {
+                // 1. Validate technician exists
+                var technician = await _unitOfWork.Technicians.GetByIdAsync(request.TechnicianId);
+                if (technician == null || technician.IsDeleted == true)
+                {
+                    throw new ArgumentException("Technician not found");
+                }
+
+                // 2. Get bookings with pagination and filtering
+                var (bookings, totalCount) = await _unitOfWork.Bookings.GetBookingsByTechnicianIdAsync(
+                    request.TechnicianId, request.Status, request.Page, request.PageSize);
+
+                // 3. Map to response items
+                var bookingItems = new List<TechnicianBookingItem>();
+                foreach (var booking in bookings)
+                {
+                    var bookingItem = new TechnicianBookingItem
+                    {
+                        BookingId = booking.BookingId,
+                        Status = booking.Status,
+                        BookingDate = booking.BookingDate,
+                        PreferredTimeSlot = booking.PreferredTimeSlot,
+                        CustomerName = booking.CustomerName ?? booking.User?.FullName ?? "N/A",
+                        CustomerPhone = booking.CustomerPhone ?? booking.User?.Phone ?? "N/A",
+                        ServiceName = booking.Service?.ServiceName ?? "N/A",
+                        ProblemDescription = booking.ProblemDescription ?? "N/A",
+                        UrgencyLevel = booking.UrgencyLevel ?? "normal",
+                        TotalPrice = booking.TotalPrice,
+                        FormattedPrice = booking.TotalPrice.HasValue ? $"{booking.TotalPrice:N0} ₫" : "N/A",
+                        FullAddress = BuildFullAddress(booking.Address),
+                        CreatedAt = booking.CreatedAt ?? DateTime.Now,
+                        CompletedAt = booking.Status?.ToLower() == "completed" ? booking.UpdatedAt : null
+                    };
+
+                    bookingItems.Add(bookingItem);
+                }
+
+                // 4. Calculate total pages
+                var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
+
+                // 5. Build response
+                return new GetBookingsByTechnicianResponse
+                {
+                    Bookings = bookingItems,
+                    TotalCount = totalCount,
+                    Page = request.Page,
+                    PageSize = request.PageSize,
+                    TotalPages = totalPages,
+                    FilteredStatus = request.Status,
+                    Message = $"Retrieved {bookingItems.Count} bookings for technician {technician.FullName}"
+                };
+            }
+            catch (ArgumentException)
+            {
+                throw; // Re-throw ArgumentException for controller to handle
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving technician bookings: {ex.Message}");
+            }
+        }
+
+        private string BuildFullAddress(Address address)
+        {
+            if (address == null) return "N/A";
+
+            var addressParts = new List<string>();
+
+            if (!string.IsNullOrEmpty(address.Street)) addressParts.Add(address.Street);
+            if (!string.IsNullOrEmpty(address.Ward)) addressParts.Add(address.Ward);
+            if (!string.IsNullOrEmpty(address.District)) addressParts.Add(address.District);
+            if (!string.IsNullOrEmpty(address.City)) addressParts.Add(address.City);
+
+            return addressParts.Any() ? string.Join(", ", addressParts) : "N/A";
         }
     }
 }

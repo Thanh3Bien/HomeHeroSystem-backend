@@ -25,5 +25,8 @@ namespace HomeHeroSystem.Services.Interfaces
 
         Task<IEnumerable<string>> GetTechnicianNamesAsync();
         Task<IEnumerable<string>> SearchTechnicianNamesAsync(string keyword);
+
+
+        Task<TechnicianItem> GetTechnicianByIdAsync(int technicianId);
     }
 }

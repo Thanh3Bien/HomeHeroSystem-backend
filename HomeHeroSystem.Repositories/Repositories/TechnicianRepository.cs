@@ -249,5 +249,22 @@ namespace HomeHeroSystem.Repositories.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Technician?> GetByEmailAsync(string email)
+        {
+            try
+            {
+                return await _dbSet
+                    .Include(t => t.Address)
+                    .Include(t => t.TechnicianSkills)
+                        .ThenInclude(ts => ts.Skill)
+                    .FirstOrDefaultAsync(t => t.Email == email && t.IsDeleted == false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while fetching technician by email: {email}");
+                throw;
+            }
+        }
+
     }
 }

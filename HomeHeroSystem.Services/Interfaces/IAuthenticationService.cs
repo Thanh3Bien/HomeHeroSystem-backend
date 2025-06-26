@@ -9,7 +9,8 @@ namespace HomeHeroSystem.Services.Interfaces
 {
     public interface IAuthenticationService
     {
-        Task<LoginResponse> LoginAsync(LoginRequest loginRequest);
-        Task<bool> LogoutAsync(int userId);
+        Task<LoginResponse?> LoginAsync(LoginRequest loginRequest);
+        Task<bool> LogoutAsync(int userId, string userType);
+        Task<CurrentUserResponse?> GetCurrentUserAsync(int userId, string userType);
     }
 }
