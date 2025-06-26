@@ -1,5 +1,6 @@
 ﻿using HomeHeroSystem.Services.Interfaces;
 using HomeHeroSystem.Services.Models.Booking;
+using HomeHeroSystem.Services.Models.BookingByTechnician;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -200,6 +201,81 @@ namespace HomeHeroSystem.API.Controllers
                 {
                     IsSuccess = false,
                     Message = ex.Message,
+                    Data = (object)null
+                });
+            }
+        }
+
+
+        [HttpGet("technician/{technicianId}")]
+        public async Task<IActionResult> GetBookingsByTechnicianIdAsync(
+    int technicianId,
+    [FromQuery] string? status = null,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate parameters
+                if (technicianId <= 0)
+                {
+                    return BadRequest(new { message = "Invalid technician ID. ID must be greater than 0." });
+                }
+
+                if (page <= 0)
+                {
+                    return BadRequest(new { message = "Page must be greater than 0." });
+                }
+
+                if (pageSize <= 0 || pageSize > 100)
+                {
+                    return BadRequest(new { message = "Page size must be between 1 and 100." });
+                }
+
+                // Build request
+                var request = new GetBookingsByTechnicianRequest
+                {
+                    TechnicianId = technicianId,
+                    Status = status,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                // Get bookings
+                var result = await _bookingService.GetBookingsByTechnicianIdAsync(request);
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    Message = result.Message,
+                    Data = result,
+                    Pagination = new
+                    {
+                        CurrentPage = result.Page,
+                        PageSize = result.PageSize,
+                        TotalCount = result.TotalCount,
+                        TotalPages = result.TotalPages,
+                        HasPrevious = result.Page > 1,
+                        HasNext = result.Page < result.TotalPages
+                    }
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new
+                {
+                    IsSuccess = false,
+                    Message = ex.Message,
+                    Data = (object)null
+                });
+            }
+            catch (Exception ex)
+            {
+                // Internal server error
+                return StatusCode(500, new
+                {
+                    IsSuccess = false,
+                    Message = $"Internal server error: {ex.Message}",
                     Data = (object)null
                 });
             }

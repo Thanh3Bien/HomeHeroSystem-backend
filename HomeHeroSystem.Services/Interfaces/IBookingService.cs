@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HomeHeroSystem.Repositories.Entities;
 using HomeHeroSystem.Services.Models.Booking;
+using HomeHeroSystem.Services.Models.BookingByTechnician;
 using HomeHeroSystem.Services.Models.Technician;
 
 namespace HomeHeroSystem.Services.Interfaces
@@ -30,6 +31,10 @@ namespace HomeHeroSystem.Services.Interfaces
 
         Task<CreateBookingResponse> CreateBookingWithAutoAssignAsync(CreateBookingWithAutoAssignRequest request);
         Task<TechnicianAssignmentResult> FindBestTechnicianAsync(int serviceId, DateTime bookingDate, string timeSlot, string ward, string district);
+
+
+        //GetBookingByTechnicianId
+        Task<GetBookingsByTechnicianResponse> GetBookingsByTechnicianIdAsync(GetBookingsByTechnicianRequest request);
 
 
     }

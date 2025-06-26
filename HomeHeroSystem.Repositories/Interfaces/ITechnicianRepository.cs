@@ -42,5 +42,8 @@ namespace HomeHeroSystem.Repositories.Interfaces
         Task<IEnumerable<string>> GetTechnicianNamesAsync();
         Task<IEnumerable<string>> SearchTechnicianNamesAsync(string keyword);
 
+
+        Task<Technician?> GetByEmailAsync(string email);
+
     }
 }

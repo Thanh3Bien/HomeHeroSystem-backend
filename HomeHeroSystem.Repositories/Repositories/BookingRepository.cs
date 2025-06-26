@@ -205,5 +205,60 @@ namespace HomeHeroSystem.Repositories.Repositories
                 .Include(t => t.Address)
                 .FirstOrDefaultAsync(t => t.TechnicianId == technicianId && t.IsActive == true && t.IsDeleted == false);
         }
+
+        public async Task<(List<Booking> bookings, int totalCount)> GetBookingsByTechnicianIdAsync(
+    int technicianId, string? status = null, int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var query = _context.Bookings
+            .Include(b => b.Service)
+            .Include(b => b.Address)
+            .Include(b => b.Technician)
+            .Include(b => b.User)
+            .Where(b => b.TechnicianId == technicianId && b.IsDeleted != true);
+                if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+                {
+                    query = query.Where(b => b.Status.ToLower() == status.ToLower());
+                }
+
+                // Get total count before pagination
+                var totalCount = await query.CountAsync();
+
+                // Apply sorting (newest first) and pagination
+                var bookings = await query
+                    .OrderByDescending(b => b.BookingDate)
+                    .ThenByDescending(b => b.CreatedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return (bookings, totalCount);
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+
+        }
+
+        public async Task<List<string>> GetBookingStatusesByTechnicianAsync(int technicianId)
+        {
+            try
+            {
+                return await _context.Bookings
+                    .Where(b => b.TechnicianId == technicianId && b.IsDeleted != true)
+                    .Select(b => b.Status)
+                    .Distinct()
+                    .OrderBy(s => s)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting booking statuses for technician ID: {TechnicianId}", technicianId);
+                throw new Exception($"Error retrieving booking statuses: {ex.Message}");
+            }
+        }
     }
 }

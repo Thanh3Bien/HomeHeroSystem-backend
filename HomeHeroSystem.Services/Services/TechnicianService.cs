@@ -65,6 +65,7 @@ namespace HomeHeroSystem.Services.Services
                 throw new Exception(ex.Message);
             }
         }
+
         public async Task<CreateTechnicianResponse> CreateTechnicianAsync(CreateTechnicianRequest request)
         {
             try
@@ -387,6 +388,41 @@ namespace HomeHeroSystem.Services.Services
             }
             catch (Exception ex)
             {
+                throw new Exception(ex.Message);
+            }
+        }
+
+
+        public async Task<TechnicianItem> GetTechnicianByIdAsync(int technicianId)
+        {
+            try
+            {
+                var technician = await _unitOfWork.Technicians.GetByIdAsync(technicianId);
+                if (technician == null || technician.IsDeleted == true)
+                {
+                    throw new ArgumentException("Technician not found");
+                }
+                var skills = await _unitOfWork.Technicians.GetTechnicianSkillsAsync(technician.TechnicianId);
+                var rating = await _unitOfWork.Technicians.GetTechnicianRatingAsync(technician.TechnicianId);
+                var jobsCount = await _unitOfWork.Technicians.GetTechnicianJobsCountAsync(technician.TechnicianId);
+                var technicianDetail = new TechnicianItem
+                {
+                    TechnicianId = technician.TechnicianId,
+                    FullName = technician.FullName,
+                    Email = technician.Email,
+                    Phone = technician.Phone,
+                    ExperienceYears = technician.ExperienceYears,
+                    Skills = skills,
+                    Rating = rating,
+                    JobsCount = jobsCount,
+                    IsActive = technician.IsActive ?? false,
+                    JoinDate = technician.CreatedAt,
+                };
+                return technicianDetail;
+            }
+            catch (Exception ex)
+            {
+
                 throw new Exception(ex.Message);
             }
         }

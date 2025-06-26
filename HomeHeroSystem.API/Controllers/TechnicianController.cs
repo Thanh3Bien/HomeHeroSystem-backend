@@ -144,5 +144,28 @@ namespace HomeHeroSystem.API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTechnicianByIdAsync(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest(new { message = "Invalid technician ID. ID must be greater than 0." });
+                }
+
+
+                var result = await _technicianService.GetTechnicianByIdAsync(id);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Internal server error: {ex.Message}" });
+            }
+        }
     }
 }
