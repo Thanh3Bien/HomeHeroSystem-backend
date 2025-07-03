@@ -22,7 +22,8 @@ namespace HomeHeroSystem.Repositories.Infrastructures
         IProductCategoryRepository ProductCategories { get; }
         IAddressRepository Addresses { get; }
         IServiceCategoryRepository ServiceCategories { get; }
-   
+        IPaymentRepository Payments { get; }
+
         Task CompleteAsync();
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();

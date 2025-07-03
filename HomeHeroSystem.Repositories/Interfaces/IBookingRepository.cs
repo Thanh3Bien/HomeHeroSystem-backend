@@ -41,5 +41,12 @@ namespace HomeHeroSystem.Repositories.Interfaces
         Task<List<string>> GetBookingStatusesByTechnicianAsync(int technicianId);
 
 
+
+        //GetActiveBookingByUser
+        Task<Booking?> GetActiveBookingByUserIdAsync(int userId);
+
+        Task<List<Booking>> GetUnpaidBookingsByUserIdAsync(int userId);
+
+
     }
 }

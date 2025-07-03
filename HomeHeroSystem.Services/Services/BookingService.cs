@@ -480,5 +480,136 @@ namespace HomeHeroSystem.Services.Services
 
             return addressParts.Any() ? string.Join(", ", addressParts) : "N/A";
         }
+
+        // Thêm vào BookingService class
+        public async Task<GetActiveBookingResponse?> GetActiveBookingByUserIdAsync(int userId)
+        {
+            try
+            {
+                // Get active booking from repository
+                var activeBooking = await _unitOfWork.Bookings.GetActiveBookingByUserIdAsync(userId);
+                var technician = await _unitOfWork.Technicians.GetByIdAsync(activeBooking.TechnicianId);
+
+                if (activeBooking == null)
+                {
+                    return null;
+                }
+
+                // Build full address
+                var fullAddress = BuildFullAddress(activeBooking.Address);
+                var rating = await _unitOfWork.Technicians.GetTechnicianRatingAsync(technician.TechnicianId);
+
+                // Build technician info (if assigned)
+                TechnicianInfo? technicianInfo = null;
+                if (activeBooking.Technician != null)
+                {
+                    technicianInfo = new TechnicianInfo
+                    {
+                        TechnicianId = activeBooking.Technician.TechnicianId,
+                        Name = activeBooking.Technician.FullName,
+                        Phone = activeBooking.Technician.Phone,
+                        Rating = rating,
+                        Experience = $"{activeBooking.Technician.ExperienceYears ?? 1} năm kinh nghiệm"
+                    };
+                }
+
+                // Build status history (simplified version)
+                var statusHistory = new List<StatusHistoryItem>();
+
+                // Add created status
+                if (activeBooking.CreatedAt.HasValue)
+                {
+                    statusHistory.Add(new StatusHistoryItem
+                    {
+                        Status = "Pending",
+                        Timestamp = activeBooking.CreatedAt.Value,
+                        Note = "Đơn hàng đã được tạo"
+                    });
+                }
+
+                // Add current status if different from Pending
+                if (activeBooking.Status != "Pending" && activeBooking.UpdatedAt.HasValue)
+                {
+                    var statusNote = activeBooking.Status switch
+                    {
+                        "Confirmed" => "Đã phân công thợ và xác nhận lịch hẹn",
+                        "InProgress" => "Thợ đang tiến hành sửa chữa",
+                        "WaitingTechnician" => "Đang tìm thợ phù hợp",
+                        _ => $"Trạng thái được cập nhật thành {activeBooking.Status}"
+                    };
+
+                    statusHistory.Add(new StatusHistoryItem
+                    {
+                        Status = activeBooking.Status,
+                        Timestamp = activeBooking.UpdatedAt.Value,
+                        Note = statusNote
+                    });
+                }
+
+                // Build response
+                var response = new GetActiveBookingResponse
+                {
+                    BookingId = activeBooking.BookingId,
+                    Status = activeBooking.Status,
+                    CustomerName = activeBooking.CustomerName ?? "N/A",
+                    CustomerPhone = activeBooking.CustomerPhone ?? "N/A",
+                    ServiceType = activeBooking.Service?.ServiceName ?? "N/A",
+                    Description = activeBooking.ProblemDescription ?? "N/A",
+                    Address = fullAddress,
+                    PreferredDate = activeBooking.BookingDate.ToString("yyyy-MM-dd"),
+                    PreferredTime = activeBooking.PreferredTimeSlot ?? "N/A",
+                    UrgencyLevel = activeBooking.UrgencyLevel ?? "normal",
+                    EstimatedPrice = activeBooking.TotalPrice.HasValue ? $"{activeBooking.TotalPrice:N0}" : "0",
+                    ActualPrice = activeBooking.Status == "Completed" && activeBooking.TotalPrice.HasValue ?
+                                 $"{activeBooking.TotalPrice:N0}" : null,
+                    TechnicianInfo = technicianInfo,
+                    CreatedAt = activeBooking.CreatedAt ?? DateTime.Now,
+                    UpdatedAt = activeBooking.UpdatedAt ?? activeBooking.CreatedAt ?? DateTime.Now,
+                    StatusHistory = statusHistory.OrderBy(s => s.Timestamp).ToList()
+                };
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting active booking for user {userId}: {ex.Message}");
+            }
+        }
+
+        public async Task<GetUnpaidBookingsResponse> GetUnpaidBookingsByUserIdAsync(int userId)
+        {
+            try
+            {
+                var unpaidBookings = await _unitOfWork.Bookings.GetUnpaidBookingsByUserIdAsync(userId);
+
+                var unpaidItems = unpaidBookings.Select(b => new UnpaidBookingItem
+                {
+                    BookingId = b.BookingId,
+                    ServiceName = b.Service?.ServiceName ?? "N/A",
+                    TechnicianName = b.Technician?.FullName ?? "N/A",
+                    CompletedAt = b.UpdatedAt ?? b.CreatedAt ?? DateTime.Now,
+                    TotalPrice = b.TotalPrice ?? 0,
+                    FormattedPrice = $"{(b.TotalPrice ?? 0):N0} ₫",
+                    BookingCode = $"BK{b.BookingId:D8}"
+                }).ToList();
+
+                var totalAmount = unpaidItems.Sum(x => x.TotalPrice);
+
+                return new GetUnpaidBookingsResponse
+                {
+                    UnpaidBookings = unpaidItems,
+                    TotalCount = unpaidItems.Count,
+                    TotalAmount = totalAmount,
+                    FormattedTotalAmount = $"{totalAmount:N0} ₫",
+                    Message = unpaidItems.Count > 0
+                        ? $"Có {unpaidItems.Count} đơn hàng cần thanh toán"
+                        : "Không có đơn hàng nào cần thanh toán"
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting unpaid bookings for user {userId}: {ex.Message}");
+            }
+        }
     }
 }

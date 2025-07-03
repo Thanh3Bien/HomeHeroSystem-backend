@@ -25,6 +25,13 @@ namespace HomeHeroSystem.Services.Models.Booking
         public DateTime BookingDate { get; set; }
         public string Status { get; set; } = null!;
 
+        public string? PreferredTimeSlot { get; set; }
+        public string? ProblemDescription { get; set; }
+        public string? UrgencyLevel { get; set; }
+        public decimal? UrgencyFee { get; set; }
+        public decimal? TotalPrice { get; set; }
+        public string? CustomerPhone { get; set; }
+        public string? Note { get; set; }
         // Address Information
         public string Address { get; set; } = null!;
         public string Street { get; set; } = null!;
@@ -32,7 +39,6 @@ namespace HomeHeroSystem.Services.Models.Booking
         public string District { get; set; } = null!;
         public string City { get; set; } = null!;
 
-        // Additional Information
-        public string? Note { get; set; }
+       
     }
 }
