@@ -260,5 +260,54 @@ namespace HomeHeroSystem.Repositories.Repositories
                 throw new Exception($"Error retrieving booking statuses: {ex.Message}");
             }
         }
+
+        public async Task<Booking?> GetActiveBookingByUserIdAsync(int userId)
+        {
+            try
+            {
+
+                var activeBooking = await _context.Bookings
+                    .Include(b => b.Service)
+                    .Include(b => b.Technician)
+                    .Include(b => b.Address)
+                    .Where(b => b.UserId == userId &&
+                               b.IsDeleted != true &&
+                               b.Status != "Completed" &&
+                               b.Status != "Cancelled")
+                    .OrderByDescending(b => b.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                return activeBooking;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting active booking for user ID: {UserId}", userId);
+                throw new Exception($"Error retrieving active booking: {ex.Message}");
+            }
+        }
+
+        public async Task<List<Booking>> GetUnpaidBookingsByUserIdAsync(int userId)
+        {
+            try
+            {
+                var unpaidBookings = await _context.Bookings
+                    .Include(b => b.Service)
+                    .Include(b => b.Technician)
+                    .Include(b => b.Address)
+                    .Where(b => b.UserId == userId &&
+                               b.Status == "Completed" &&
+                               b.IsDeleted != true &&
+                               !_context.Payments.Any(p => p.BookingId == b.BookingId))
+                    .OrderByDescending(b => b.UpdatedAt ?? b.CreatedAt)
+                    .ToListAsync();
+
+                return unpaidBookings;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting unpaid bookings for user ID: {UserId}", userId);
+                throw new Exception($"Error retrieving unpaid bookings: {ex.Message}");
+            }
+        }
     }
 }

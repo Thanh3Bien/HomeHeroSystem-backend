@@ -28,6 +28,7 @@ namespace HomeHeroSystem.Repositories.Infrastructures
         public IProductCategoryRepository ProductCategories { get; private set; }
         public IAddressRepository Addresses {  get; private set; } 
         public IServiceCategoryRepository ServiceCategories { get; private set; }
+        public IPaymentRepository Payments { get; private set; }
         public UnitOfWork(HomeHeroContext context, ILoggerFactory loggerFactory)
         {
             _context = context;
@@ -47,6 +48,7 @@ namespace HomeHeroSystem.Repositories.Infrastructures
             ProductCategories = new ProductCategoryRepository(_context, _logger);
             Addresses = new AddressRepository(_context, _logger);
             ServiceCategories = new ServiceCategoryRepository(_context, _logger);
+            Payments = new PaymentRepository(_context, _logger);
 
         }
         public async Task CompleteAsync() => await _context.SaveChangesAsync();

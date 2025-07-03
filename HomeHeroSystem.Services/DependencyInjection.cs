@@ -27,6 +27,7 @@ namespace HomeHeroSystem.Services
             services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<IPaymentService, PaymentService>();
             services.AddAutoMapper(typeof(MappingProfiles));
             return services;
         }

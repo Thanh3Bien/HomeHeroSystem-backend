@@ -280,5 +280,89 @@ namespace HomeHeroSystem.API.Controllers
                 });
             }
         }
+        [HttpGet("user/{userId}/active")]
+        public async Task<IActionResult> GetActiveBookingByUserIdAsync(int userId)
+        {
+            try
+            {
+                // Validate userId
+                if (userId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        IsSuccess = false,
+                        Message = "Invalid user ID. ID must be greater than 0.",
+                        Data = (object)null
+                    });
+                }
+
+                // Get active booking
+                var activeBooking = await _bookingService.GetActiveBookingByUserIdAsync(userId);
+
+                // Check if active booking exists
+                if (activeBooking == null)
+                {
+                    return Ok(new
+                    {
+                        IsSuccess = true,
+                        Message = "No active booking found for this user.",
+                        Data = (object)null
+                    });
+                }
+
+                // Return success response
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    Message = "Active booking retrieved successfully.",
+                    Data = activeBooking
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log error and return server error
+                return StatusCode(500, new
+                {
+                    IsSuccess = false,
+                    Message = $"Internal server error: {ex.Message}",
+                    Data = (object)null
+                });
+            }
+        }
+
+        [HttpGet("user/{userId}/unpaid")]
+        public async Task<IActionResult> GetUnpaidBookingsByUserIdAsync(int userId)
+        {
+            try
+            {
+                if (userId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        IsSuccess = false,
+                        Message = "Invalid user ID. ID must be greater than 0.",
+                        Data = (object)null
+                    });
+                }
+
+                var unpaidBookings = await _bookingService.GetUnpaidBookingsByUserIdAsync(userId);
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    Message = unpaidBookings.Message,
+                    Data = unpaidBookings
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    IsSuccess = false,
+                    Message = $"Internal server error: {ex.Message}",
+                    Data = (object)null
+                });
+            }
+        }
     }
 }

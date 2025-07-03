@@ -37,5 +37,10 @@ namespace HomeHeroSystem.Services.Interfaces
         Task<GetBookingsByTechnicianResponse> GetBookingsByTechnicianIdAsync(GetBookingsByTechnicianRequest request);
 
 
+
+        Task<GetActiveBookingResponse?> GetActiveBookingByUserIdAsync(int userId);
+        Task<GetUnpaidBookingsResponse> GetUnpaidBookingsByUserIdAsync(int userId);
+
+
     }
 }
