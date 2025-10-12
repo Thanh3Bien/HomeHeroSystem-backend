@@ -11,6 +11,7 @@ using HomeHeroSystem.Repositories.Infrastructures;
 using HomeHeroSystem.Services.Interfaces;
 using HomeHeroSystem.Services.Models.Booking;
 using HomeHeroSystem.Services.Models.BookingByTechnician;
+using HomeHeroSystem.Services.Models.BookingByUser;
 using HomeHeroSystem.Services.Models.Technician;
 
 namespace HomeHeroSystem.Services.Services
@@ -609,6 +610,92 @@ namespace HomeHeroSystem.Services.Services
             catch (Exception ex)
             {
                 throw new Exception($"Error getting unpaid bookings for user {userId}: {ex.Message}");
+            }
+        }
+
+        public async Task<GetBookingsByUserResponse> GetBookingsByUserIdAsync(GetBookingsByUserRequest request)
+        {
+            try
+            {
+                // 1. Validate user exists
+                var user = await _unitOfWork.AppUsers.GetByIdAsync(request.UserId);
+                if (user == null || user.IsDeleted == true)
+                {
+                    throw new ArgumentException("User not found");
+                }
+
+                // 2. Get bookings with pagination and filtering
+                var (bookings, totalCount) = await _unitOfWork.Bookings.GetBookingsByUserIdAsync(
+                    request.UserId, request.Status, request.Page, request.PageSize);
+
+                // 3. Map to response items
+                var bookingItems = new List<UserBookingItem>();
+                foreach (var booking in bookings)
+                {
+                    // Get technician rating
+                    double? technicianRating = null;
+                    if (booking.Technician != null)
+                    {
+                        technicianRating = (double?)await _unitOfWork.Technicians.GetTechnicianRatingAsync(booking.Technician.TechnicianId);
+                    }
+
+                    // Check if booking has payment
+                    var hasPayment = booking.Payments?.Any() == true;
+
+                    // Determine action capabilities
+                    var canCancel = booking.Status?.ToLower() == "pending" || booking.Status?.ToLower() == "confirmed";
+                    var canRate = booking.Status?.ToLower() == "completed" && booking.Feedbacks?.Any() != true;
+                    var canReorder = booking.Status?.ToLower() == "completed";
+
+                    var bookingItem = new UserBookingItem
+                    {
+                        BookingId = booking.BookingId,
+                        BookingCode = $"BK{booking.BookingId:D8}",
+                        Status = booking.Status ?? "Unknown",
+                        BookingDate = booking.BookingDate,
+                        PreferredTimeSlot = booking.PreferredTimeSlot,
+                        ServiceName = booking.Service?.ServiceName ?? "N/A",
+                        ProblemDescription = booking.ProblemDescription,
+                        TechnicianName = booking.Technician?.FullName ?? "Chưa phân công",
+                        TechnicianRating = technicianRating,
+                        TotalPrice = booking.TotalPrice,
+                        FormattedPrice = booking.TotalPrice.HasValue ? $"{booking.TotalPrice:N0} ₫" : "0 ₫",
+                        FullAddress = BuildFullAddress(booking.Address),
+                        UrgencyLevel = booking.UrgencyLevel,
+                        CreatedAt = booking.CreatedAt ?? DateTime.Now,
+                        UpdatedAt = booking.UpdatedAt,
+                        CompletedAt = booking.Status?.ToLower() == "completed" ? booking.UpdatedAt : null,
+                        CanCancel = canCancel,
+                        CanRate = canRate,
+                        CanReorder = canReorder,
+                        HasPayment = hasPayment
+                    };
+
+                    bookingItems.Add(bookingItem);
+                }
+
+                // 4. Calculate total pages
+                var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
+
+                // 5. Build response
+                return new GetBookingsByUserResponse
+                {
+                    Orders = bookingItems,
+                    TotalCount = totalCount,
+                    Page = request.Page,
+                    PageSize = request.PageSize,
+                    TotalPages = totalPages,
+                    FilteredStatus = request.Status,
+                    Message = $"Retrieved {bookingItems.Count} bookings for user"
+                };
+            }
+            catch (ArgumentException)
+            {
+                throw; // Re-throw ArgumentException for controller to handle
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving user bookings: {ex.Message}");
             }
         }
     }

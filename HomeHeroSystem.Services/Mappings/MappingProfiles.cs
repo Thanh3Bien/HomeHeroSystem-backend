@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using HomeHeroSystem.Repositories.Entities;
 using HomeHeroSystem.Services.Models.Address;
+using HomeHeroSystem.Services.Models.AppUser;
 using HomeHeroSystem.Services.Models.Booking;
 
 namespace HomeHeroSystem.Services.Mappings
@@ -59,6 +60,28 @@ namespace HomeHeroSystem.Services.Mappings
             CreateMap<CreateAddressRequest, Address>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
                 .ForMember(dest => dest.IsDeleted, opt => opt.MapFrom(src => false));
+            #endregion
+
+            #region User Mappings
+            CreateMap<CreateUserRequest, AppUser>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true))
+                .ForMember(dest => dest.IsDeleted, opt => opt.MapFrom(src => false))
+                .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => false))
+                .ForMember(dest => dest.AddressId, opt => opt.MapFrom(src => (int?)null))
+                .ForMember(dest => dest.RefreshToken, opt => opt.MapFrom(src => (string)null))
+                .ForMember(dest => dest.RefreshTokenExpiryTime, opt => opt.MapFrom(src => (DateTime?)null))
+                .ForMember(dest => dest.LastLoginDate, opt => opt.MapFrom(src => (DateTime?)null))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => (DateTime?)null));
+
+            CreateMap<AppUser, CreateUserResponse>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+                .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
             #endregion
         }
 

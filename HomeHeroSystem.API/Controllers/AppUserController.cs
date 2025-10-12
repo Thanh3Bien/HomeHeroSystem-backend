@@ -1,5 +1,6 @@
 ﻿using HomeHeroSystem.Repositories.Entities;
 using HomeHeroSystem.Services.Interfaces;
+using HomeHeroSystem.Services.Models.AppUser;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -107,7 +108,7 @@ namespace HomeHeroSystem.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] AppUser user)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest user)
         {
             try
             {
@@ -189,6 +190,110 @@ namespace HomeHeroSystem.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error occurred while activating user with id: {id}");
+                return StatusCode(500, new { message = "Internal server error occurred" });
+            }
+        }
+
+        [HttpGet("{id}/personal-information")]
+        public async Task<IActionResult> GetPersonalInformation(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest(new { message = "Invalid user ID" });
+                }
+
+                var personalInfo = await _appUserService.GetPersonalInformationAsync(id);
+                if (personalInfo == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                return Ok(new
+                {
+                    message = "Personal information retrieved successfully",
+                    data = personalInfo
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while getting personal information for user id: {id}");
+                return StatusCode(500, new { message = "Internal server error occurred" });
+            }
+        }
+
+        [HttpPut("{id}/personal-information")]
+        public async Task<IActionResult> UpdatePersonalInformation(int id, [FromBody] UpdatePersonalInformationRequest request)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest(new { message = "Invalid user ID" });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var updatedInfo = await _appUserService.UpdatePersonalInformationAsync(id, request);
+                if (updatedInfo == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                return Ok(new
+                {
+                    message = "Personal information updated successfully",
+                    data = updatedInfo
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while updating personal information for user id: {id}");
+                return StatusCode(500, new { message = "Internal server error occurred" });
+            }
+        }
+
+        [HttpPut("{id}/change-password")]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest request)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest(new { message = "Invalid user ID" });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _appUserService.ChangePasswordAsync(id, request);
+
+                if (result.Success)
+                {
+                    return Ok(new
+                    {
+                        message = result.Message,
+                        data = result
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { message = result.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while changing password for user id: {id}");
                 return StatusCode(500, new { message = "Internal server error occurred" });
             }
         }
