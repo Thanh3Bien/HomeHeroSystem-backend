@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HomeHeroSystem.Repositories.Entities;
 using HomeHeroSystem.Services.Models.Booking;
 using HomeHeroSystem.Services.Models.BookingByTechnician;
+using HomeHeroSystem.Services.Models.BookingByUser;
 using HomeHeroSystem.Services.Models.Technician;
 
 namespace HomeHeroSystem.Services.Interfaces
@@ -40,6 +41,9 @@ namespace HomeHeroSystem.Services.Interfaces
 
         Task<GetActiveBookingResponse?> GetActiveBookingByUserIdAsync(int userId);
         Task<GetUnpaidBookingsResponse> GetUnpaidBookingsByUserIdAsync(int userId);
+
+
+        Task<GetBookingsByUserResponse> GetBookingsByUserIdAsync(GetBookingsByUserRequest request);
 
 
     }

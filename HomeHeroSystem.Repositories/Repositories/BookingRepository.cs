@@ -309,5 +309,42 @@ namespace HomeHeroSystem.Repositories.Repositories
                 throw new Exception($"Error retrieving unpaid bookings: {ex.Message}");
             }
         }
+
+        public async Task<(List<Booking> bookings, int totalCount)> GetBookingsByUserIdAsync(
+            int userId, string? status = null, int page = 1, int pageSize = 10)
+        {
+            try
+            {
+
+                var query = _context.Bookings
+                    .Include(b => b.Service)
+                    .Include(b => b.Technician)
+                    .Include(b => b.Address)
+                    .Include(b => b.User)
+                    .Include(b => b.Payments)
+                    .Include(b => b.Feedbacks)
+                    .Where(b => b.UserId == userId && b.IsDeleted != true);
+
+                if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+                {
+                    query = query.Where(b => b.Status.ToLower() == status.ToLower());
+                }
+
+                var totalCount = await query.CountAsync();
+                var bookings = await query
+                    .OrderByDescending(b => b.CreatedAt)
+                    .ThenByDescending(b => b.BookingDate)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return (bookings, totalCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting bookings for user ID: {UserId}", userId);
+                throw new Exception($"Error retrieving user bookings: {ex.Message}");
+            }
+        }
     }
 }

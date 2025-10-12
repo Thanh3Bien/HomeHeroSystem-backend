@@ -1,6 +1,7 @@
 ﻿using HomeHeroSystem.Services.Interfaces;
 using HomeHeroSystem.Services.Models.Booking;
 using HomeHeroSystem.Services.Models.BookingByTechnician;
+using HomeHeroSystem.Services.Models.BookingByUser;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -361,6 +362,95 @@ namespace HomeHeroSystem.API.Controllers
                     IsSuccess = false,
                     Message = $"Internal server error: {ex.Message}",
                     Data = (object)null
+                });
+            }
+        }
+
+        [HttpGet("user/{userId}/orders")]
+        public async Task<IActionResult> GetBookingsByUserIdAsync(
+            int userId,
+            [FromQuery] string? status = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate parameters
+                if (userId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        isSuccess = false,
+                        message = "Invalid user ID. ID must be greater than 0.",
+                        data = (object)null
+                    });
+                }
+
+                if (page <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        isSuccess = false,
+                        message = "Page must be greater than 0.",
+                        data = (object)null
+                    });
+                }
+
+                if (pageSize <= 0 || pageSize > 100)
+                {
+                    return BadRequest(new
+                    {
+                        isSuccess = false,
+                        message = "Page size must be between 1 and 100.",
+                        data = (object)null
+                    });
+                }
+
+                // Build request
+                var request = new GetBookingsByUserRequest
+                {
+                    UserId = userId,
+                    Status = status,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                // Get bookings
+                var result = await _bookingService.GetBookingsByUserIdAsync(request);
+
+                return Ok(new
+                {
+                    isSuccess = true,
+                    message = result.Message,
+                    data = result,
+                    pagination = new
+                    {
+                        currentPage = result.Page,
+                        pageSize = result.PageSize,
+                        totalCount = result.TotalCount,
+                        totalPages = result.TotalPages,
+                        hasPrevious = result.Page > 1,
+                        hasNext = result.Page < result.TotalPages
+                    }
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new
+                {
+                    isSuccess = false,
+                    message = ex.Message,
+                    data = (object)null
+                });
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, new
+                {
+                    isSuccess = false,
+                    message = $"Internal server error: {ex.Message}",
+                    data = (object)null
                 });
             }
         }
